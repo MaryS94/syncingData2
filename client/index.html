@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script type="text/babel" >
+        "use strict";
+
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var drawQ = {};
+
+
+        const init = () => {
+
+            var socket = io.connect();
+            
+
+
+
+
+            const draw = () => {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                let keys = Object.keys(drawQ);
+
+                for(var i = 0; i < keys.length; i++){
+
+                    const drawCall = drawQ[keys[i]];
+
+                    if(i == 0) { ctx.fillStyle = "black";}
+                    else       { ctx.fillStyle = "red";}
+
+                    ctx.fillRect(drawCall.x, drawCall.y, drawCall.width, drawCall.height);
+                }
+            }   
+
+            const setCalls = () =>{
+
+                var randomX = Math.random() * canvas.width;
+                var randomY = Math.random() * canvas.height;
+
+                ctx.fillStyle = "black";
+                ctx.fillRect(randomX, randomY, 50, 50);
+                ctx.fillStyle = "red";
+
+
+                let time = new Date().getTime();
+                drawQ[time] = {x:randomX, y:randomY, width:50, height:50};
+
+                time = new Date().getTime();
+                let coords = {x:randomX, y:randomY, width:50, height:50};
+
+                socket.emit('draw', {time:time, coords:coords});
+            }
+
+            const handleMessage = (data) => {
+                drawQ[data.time] = data.coords;
+                draw();
+            }
+          
+            socket.on('draw', (data)=>{
+                handleMessage(data);
+            
+            });
+
+           setCalls();
+        };
+
+
+        window.onload = init;
+    
+    </script>
+</head>
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+</body>
+</html>
